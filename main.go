@@ -482,6 +482,39 @@ func pushRules(profileID, folderName, folderID string, do, status int, hostnames
 	}
 }
 
+// Delete all managed folders from a profile
+func deleteProfile(profileID string) bool {
+	log.Printf("Starting delete for profile %s", maskID(profileID))
+
+	var namesToDelete []string
+	for _, url := range FolderURLs {
+		folderData, err := fetchFolderData(url)
+		if err != nil {
+			log.Printf("Failed to fetch folder data from %s: %v", url, err)
+			continue
+		}
+		namesToDelete = append(namesToDelete, strings.TrimSpace(folderData.Group.Group))
+	}
+
+	existingFolders, err := listExistingFolders(profileID)
+	if err != nil {
+		log.Printf("Failed to list existing folders: %v", err)
+		return false
+	}
+
+	deletedCount := 0
+	for _, name := range namesToDelete {
+		if folderID, exists := existingFolders[name]; exists {
+			if deleteFolder(profileID, name, folderID) {
+				deletedCount++
+			}
+		}
+	}
+
+	log.Printf("Delete complete: %d/%d folders removed from profile %s", deletedCount, len(namesToDelete), maskID(profileID))
+	return true
+}
+
 // Sync profile
 func syncProfile(profileID string) ProfileResult {
 	result := ProfileResult{ProfileID: profileID}
@@ -694,7 +727,13 @@ func main() {
 	var resultsMu sync.Mutex
 	var allResults []ProfileResult
 
-	log.Printf("Starting concurrent sync for %d profiles (max %d concurrent)", len(profileIDs), MaxConcurrentProfiles)
+	deleteOnly := os.Getenv("DELETE_ONLY") == "true"
+
+	if deleteOnly {
+		log.Printf("Delete mode: removing synced folders from %d profile(s)", len(profileIDs))
+	} else {
+		log.Printf("Starting concurrent sync for %d profiles (max %d concurrent)", len(profileIDs), MaxConcurrentProfiles)
+	}
 
 	for _, profileID := range profileIDs {
 		wg.Add(1)
@@ -705,13 +744,19 @@ func main() {
 			semaphore <- struct{}{}
 			defer func() { <-semaphore }() // Release semaphore
 
-			result := syncProfile(id)
-			resultsMu.Lock()
-			allResults = append(allResults, result)
-			resultsMu.Unlock()
+			if deleteOnly {
+				if deleteProfile(id) {
+					atomic.AddInt32(&successCount, 1)
+				}
+			} else {
+				result := syncProfile(id)
+				resultsMu.Lock()
+				allResults = append(allResults, result)
+				resultsMu.Unlock()
 
-			if result.Success {
-				atomic.AddInt32(&successCount, 1)
+				if result.Success {
+					atomic.AddInt32(&successCount, 1)
+				}
 			}
 		}(profileID)
 	}
@@ -719,7 +764,9 @@ func main() {
 	// Wait for all goroutines to complete
 	wg.Wait()
 
-	writeSummary(allResults)
+	if !deleteOnly {
+		writeSummary(allResults)
+	}
 
 	finalSuccessCount := int(atomic.LoadInt32(&successCount))
 	log.Printf("All profiles processed: %d/%d successful", finalSuccessCount, len(profileIDs))

@@ -1,0 +1,28 @@
+name: Remove synced folders
+
+on:
+  workflow_dispatch:
+
+jobs:
+  delete:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 'stable'
+          cache: true
+
+      - name: Build Go binary
+        run: go build -o ctrld-hagezi-sync main.go
+
+      - name: Delete synced folders
+        env:
+          TOKEN: ${{ secrets.TOKEN }}
+          PROFILE: ${{ secrets.PROFILE }}
+          DELETE_ONLY: "true"
+        run: ./ctrld-hagezi-sync
