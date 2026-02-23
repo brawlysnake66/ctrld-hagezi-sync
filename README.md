@@ -43,8 +43,10 @@ That's it. The workflows will run automatically from now on.
 
 | Workflow              | Trigger                         | What it does                                                  |
 |-----------------------|---------------------------------|---------------------------------------------------------------|
-| `check-release.yml`   | Every 2 hours                   | Checks for a new Hagezi release and triggers sync if detected |
+| `check-release.yml`   | Every 2 hours                   | Checks for a new Hagezi release and triggers sync only if the lists in `lists.txt` actually changed |
 | `sync.yml`            | Triggered by check, or manually | Builds the binary and runs the sync against your profile(s)   |
+| `remove.yml`          | Manual only                     | Removes all synced folders from your profile(s)               |
+| `clear-cache.yml`     | Manual only                     | Clears all workflow caches, forcing the next check to run as if from scratch |
 
 You can also trigger a manual sync anytime via *Actions → Sync → Run workflow*.
 
