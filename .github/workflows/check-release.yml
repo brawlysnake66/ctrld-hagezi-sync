@@ -38,19 +38,28 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           COMBINED=""
+          FETCHED=0
+          TOTAL=0
           while IFS= read -r line; do
             [[ -z "$line" || "$line" == \#* ]] && continue
+            TOTAL=$((TOTAL + 1))
             API_URL=$(echo "$line" | sed 's|https://raw.githubusercontent.com/\([^/]*\)/\([^/]*\)/[^/]*/\(.*\)|https://api.github.com/repos/\1/\2/contents/\3|')
             SHA=$(curl -s -H "Authorization: Bearer $GH_TOKEN" "$API_URL" | jq -r '.sha // empty')
             if [ -n "$SHA" ]; then
               COMBINED="${COMBINED}${SHA}"
+              FETCHED=$((FETCHED + 1))
             else
               echo "Warning: could not fetch SHA for: $line"
             fi
           done < lists.txt
-          HASH=$(echo -n "$COMBINED" | sha256sum | cut -d' ' -f1)
-          echo "hash=$HASH" >> "$GITHUB_OUTPUT"
-          echo "Files hash: $HASH"
+          if [ "$FETCHED" -eq 0 ]; then
+            echo "Error: failed to fetch any file SHA — forcing sync as fallback"
+            echo "hash=fallback-$(date +%s)" >> "$GITHUB_OUTPUT"
+          else
+            HASH=$(echo -n "$COMBINED" | sha256sum | cut -d' ' -f1)
+            echo "hash=$HASH" >> "$GITHUB_OUTPUT"
+            echo "Fetched $FETCHED/$TOTAL SHAs — files hash: $HASH"
+          fi
 
       - name: Restore cached files hash
         id: files-cache
