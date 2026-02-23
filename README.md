@@ -1,6 +1,8 @@
 # ctrld-hagezi-sync
 
-Keeps your Control D profile(s) in sync with [Hagezi DNS blocklists](https://github.com/hagezi/dns-blocklists/tree/main/controld), automatically triggered whenever Hagezi releases an update.
+Control D includes Hagezi's main blocklists (Light, Normal, Pro, Pro Plus, TIF, Ultimate) under *3rd Party Filters* — but Hagezi also publishes additional folders like **Spam TLDs, Spam IDNs, Badware Hoster, and Referral Allow** that are not available there. The only way to use them is via the API, and they need to be refreshed manually every time Hagezi updates them.
+
+This project automates both: it imports those folders into your Control D profile(s) via the API and keeps them up to date automatically whenever Hagezi publishes a new release.
 
 Everything runs on GitHub Actions — no local setup, no `.env` file.
 
@@ -53,10 +55,6 @@ You can also trigger a manual sync anytime via *Actions → Sync → Run workflo
 After each run, a summary with the number of folders and rules synced per profile is available under the *Summary* tab of the workflow run.
 
 ## Synced lists
-
-Control D already includes Hagezi's main blocklists (Light, Normal, Pro, Pro Plus, TIF, Ultimate) under *3rd Party Filters*. However, Hagezi also publishes additional folders — such as Spam TLDs, Spam IDNs, Badware Hoster, and Referral Allow — that are **not available there**. The only way to use them is via the API, and they need to be refreshed manually every time Hagezi updates them.
-
-This project automates both: it imports the folders via the API and keeps them up to date automatically whenever Hagezi publishes a new release.
 
 Lists are configured in `lists.txt` — one URL per line. Lines starting with `#` are ignored. The repository comes pre-configured with:
 
