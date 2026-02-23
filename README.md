@@ -54,20 +54,19 @@ After each run, a summary with the number of folders and rules synced per profil
 
 ## Synced lists
 
-Although this project ships pre-configured for Hagezi — chosen for the quality of its lists and the activity of the project — it supports any list in Control D's JSON folder format. Just add the raw URL to `lists.txt`.
+Control D already includes Hagezi's main blocklists (Light, Normal, Pro, Pro Plus, TIF, Ultimate) under *3rd Party Filters*. However, Hagezi also publishes additional folders — such as Spam TLDs, Spam IDNs, Badware Hoster, and Referral Allow — that are **not available there**. The only way to use them is via the API, and they need to be refreshed manually every time Hagezi updates them.
 
-Lists are configured in `lists.txt` — one URL per line. Lines starting with `#` are ignored.
+This project automates both: it imports the folders via the API and keeps them up to date automatically whenever Hagezi publishes a new release.
 
-The repository comes pre-configured with:
+Lists are configured in `lists.txt` — one URL per line. Lines starting with `#` are ignored. The repository comes pre-configured with:
 
-- Apple Private Relay Allow
-- Native Trackers: Amazon, Apple, Huawei, LG WebOS, Microsoft, OPPO/Realme, Roku, Samsung, TikTok, Vivo, Xiaomi
-- Ultimate Known Issues Allow
-- Referral Allow
-- Spam IDNs, Spam TLDs, Spam TLDs Allow
-- Badware Hoster
+- **Badware Hoster** — domains known to host malware, ransomware, and phishing pages
+- **Referral Allow** — allowlist for legitimate referral and affiliate tracking domains, preventing breakage on e-commerce sites
+- **Spam IDNs** — internationalized domain names (IDNs) that use lookalike Unicode characters to impersonate real domains
+- **Spam TLDs** — entire top-level domains with extremely high abuse rates (e.g. `.li`, `.es`, `.sbs`)
+- **Spam TLDs Allow** — exceptions for legitimate sites on the blocked TLDs, so nothing real gets broken
 
-To add or remove lists, edit `lists.txt`. Run `make list` to see all available Hagezi lists with their raw URLs ready to paste.
+Although pre-configured for Hagezi, the tool supports any list in Control D's JSON folder format. To add or remove lists, edit `lists.txt`. Run `make list` to see all available Hagezi lists with their raw URLs ready to paste.
 
 ## License
 
